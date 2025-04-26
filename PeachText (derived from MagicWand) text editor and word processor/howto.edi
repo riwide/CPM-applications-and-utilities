@@ -1,0 +1,52 @@
+A>asm termxtp1
+CP/M ASSEMBLER - v2.01
+03F7
+005H USE FACTOR
+END OF ASSEMBLY
+
+Note: the release file may be named as peachp1.com to show it is the newer  p1 patch update.
+Use the appropriate name in the following ddt command line.
+
+A>DDT 		peach.com
+DDT VERS 2.2
+NEXT  PC
+6A00 0100
+-itermxtp1.hex
+-r
+NEXT  PC
+6A00 0000
+-g0
+
+A>save 106 peach.com
+A>
+
+Note: Both the former MagicWand and the newer PeachText both name the editor as "edit.com"
+I tend to name edit.com from PeachText as peach.com to avoiod confusion, but you may need to rename it if you wish integration in with the other PeachTree components.
+
+Note: This version of Peachtext was acquired from an Epson QX10 archive and was originally configured for such.
+
+There is one known bug in the conversion to generic CP/M-80 and ANSI VT100 / XTERM escape sequences, that is that the marker character for block start and block end is ignored and the character in the document at the marker point is used. THe block copy functionality workls
+
+
+Function Keys (PC keyboard)
+---------------------------
+
+<cursor> as expected
+f1	Line scroll backward
+f2	Line scroll forward
+Home	Home line/screen
+PageUp	Page backward
+PageDn	Page forward
+Insert	Full insert (open text)
+Delete	Delete Character
+f5	Set FormFeed character
+f6	Start Search/Replace
+f7	Repeat Search/Replace
+f8	Set Block Marker
+f3	Insert character mode (until cursor move)
+f4	Delete to end of line (second push)
+Ctrl-T	Jump to Top of file
+Ctrl-B	Jump to Bottom of file
+Ctrl-W	Word delete
+BkSpace Delete backwards (if this doesn't work, check and adjust your
+        terminal emulator backspace setting)

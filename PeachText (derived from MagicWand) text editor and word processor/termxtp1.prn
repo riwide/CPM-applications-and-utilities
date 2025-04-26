@@ -1,0 +1,326 @@
+
+
+                ;    TITLE     'SBA MAGIC WAND -- TERMINAL XTERM (ANSI)'
+                ***********************************************
+                **	    T E R M I N A L	**
+                ***********************************************
+                *	   Xterm VERSION
+                
+                *    DEVELOPED BY SMALL BUSINESS APPLICATIONS INC
+                *	       3220 LOUISIANA, SUITE 205
+                *	       HOUSTON, TEXAS  77006
+                *	       (713)528-5158
+                *
+                *
+                * Revised 2025-apr-24 by Richard Deane <rwdeane@gmail.com>
+                * Patch for XTERM / VT100 terminal type
+                * See howto.edit for definition of editingkeys
+                *
+                *    LAST REVISION 1/23/18 by Douglas Miller <durgadas311@gmail.com>
+                *    for Peachtree Magic Wand as of above date.
+                *
+ 0000 =         BASE EQU  0    ;STANDARD CP/M BASE
+                
+ 0108                ORG  BASE+108H
+ 0108 C30000         JMP  0
+ 010B C30000         JMP  0
+ 010E 80             DB   128
+                
+ 0200                ORG  BASE+200H  ;TERMINAL MODULE ORIGIN
+                *
+ 0018 =         ROWSX	  EQU  24   ;DISPLAY ROWS
+ 0050 =         COLSX	  EQU  80   ;DISPLAY COLUMNS
+ 0200 1850      TERMDIM DB     ROWSX,COLSX;PHYSICAL TERMINAL LIMITS
+ 0202 =         SCRDIM	  EQU  $    ;CURRENT SCREEN LIMITS
+ 0202 17        ROWS DB   ROWSX-1
+ 0203 50        COLS DB   COLSX
+ 0204 =         CURSOR	  EQU  $    ;CURRENT CURSOR LOCATION
+ 0204 01        ROW  DB   1
+ 0205 01        COL  DB   1
+ 0206 000000    CONOUT	  DB   0,0,0;CONOUT ADDR TO BE SUPPLIED AT INITIALIZATION
+ 0209 C3F702    ZPRSEQ	  JMP  PRSEQ;OUTPUT CHAR SEQUENCE AT DE UNTIL NULL
+ 020C C3B102    ZCURSE	  JMP  CURSE;POSITION CURSOR AT HL
+ 020F C3E602    ZCLRSCR   JMP  CLRSCRN ;CLEAR WHOLE SCREEN
+ 0212 C3DB02    ZCLRLN	  JMP  CLRLINE ;CLEAR REMAINING LINE
+ 0215 C3D502    ZSCROLL   JMP  SCROLL;SCROLL 1 LINE UP
+ 0218 C3E102    ZBKSP	  JMP  BKSP ;BACKSPACE 1 FROM CURRENT COLUMN
+ 021B C3F202    ZALARM	  JMP  ALARM;SOUND ALARM BELL, IF ANY
+ 021E C31003    ZINIT	  JMP  INITSCRN ;INITIALIZE TERMINAL, IF NEEDED
+ 0221 C33B03    ZDUMMY1 JMP    DUMMY1
+ 0224 787465726DZNAME	  DB   'xterm           '
+ 0234 5854      ZID  DB   'XT' ;TERMINAL ID NUMBER FOR SERIAL
+                *
+                *********CONTROL TABLES
+                *
+ 0236 0810182028CTAB DB   8,16,24,32,40,48,56,64,72,COLSX,0,0,0,0,0,0
+ 0246 FF             DB   255  ;TAB TABLE STOP BYTE
+                *
+                *    HIGH-ORDER BIT (128+) ON INDICATES ESCAPE SEQUENCE
+                *
+ 0247 =         XTAB EQU  $    ;TABLE OF CONTROL CHARACTERS
+ 0247 0D        XRET DB   RETC ;CARRIAGE RETURN
+ 0248 C3        XCURR	  DB   128+'C' ;*****CURSOR RIGHT
+ 0249 C1        XCURU	  DB   128+'A' ;*****CURSOR UP
+ 024A C2        XCURD	  DB   128+'B' ;*****CURSOR DOWN   
+ 024B D3        XDELTL	  DB   211     ;DELETELINE DELETE
+ 024C D1        XFSCRL	  DB   128+'Q' ;'F2'LINE SCROLL FORWARD
+ 024D D0        XBSCRL	  DB   128+'P' ;'F1'LINE SCROLL BACKWARD
+ 024E E7        XPFSCRL DB     128+'g' ;'PGDN'PAGE FORWARD
+ 024F E6        XPBSCRL DB     128+'f' ;'PGUP'PAGE BACKWARD
+ 0250 C8        XHOME	  DB   128+'H' ;*HOME*HOME LINE, SCREEN
+ 0251 14        XSCRTOP DB     20   ;Ctl-TTOP OF TEXT
+ 0252 02        XSCRBOT DB     2    ;Ctl-BBOTTOM OF TEXT
+ 0253 09        XTABC	  DB   TABKEY;CTL-I (TAB KEY)
+ 0254 D2        XISRT	  DB   128+'R' ;'F3'CHARACTER INSERT
+ 0255 E3        XISRTP	  DB   128+'c' ;INSERTFULL INSERT (OPEN/CLOSE TEXT)
+ 0256 17        XISRTX	  DB   23      ;'F4'  WORD DELETE
+ 0257 1B        XESC DB   ESC  ;ESCAPE KEY
+ 0258 F3        XDUPE	  DB   128+'s' ;'f7'REPEAT SEARCH/REPLACE
+ 0259 F2        XFIND	  DB   128+'r' ;'f6'START SEARCH/REPLACE
+ 025A F4        XSETMK	  DB   128+'t' ;'f8'SET BLOCK MARKER
+ 025B F0        XFORM	  DB   128+'p' ;'f5'SET FORM FEED
+ 025C 0A        XLNFD	  DB   10   ;LINESET LINE FEED
+ 025D 08        XBKSP	  DB   8    ;BACKSPACE
+ 025E E4        XDELTC	  DB   228  ;DEL CHARACTER DELETE
+ 025F C4        XCURL	  DB   128+'D' ;*****CURSOR LEFT
+ 0260 1B        XEND DB   ESC  ;END TABLE /CURRENT CHAR
+                ;    PAGE
+                *    TABLE OF CONTROL CODE/DISPLAY SUBSTITUTIONS
+ 0261 =         SUBCTLS EQU    $    ;TRANSLATES VALUES 0-1F
+ 0261 005F000000     DB   0,'_',0,0,0,0,0,BELL,0,0
+ 026B 7C             DB   '|'  ;LINE FEED
+ 026C 00             DB   0
+ 026D 5E             DB   '^'  ;FORM FEED
+ 026E 7E        XDCR DB   '~'  ;CARRIAGE RETURN
+ 026F 000000         DB   0,0,0
+ 0272 3A             DB   ':'  ;FIND-KEY
+ 0273 0000000000     DB   0,0,0,0,0,0,0,0,0,0,0,0,0
+                *
+ 0001 =         BLKMARK EQU    1    ;BLOCK MARKER
+ 000D =         RETC EQU  13   ;LINE-END CTL CHAR
+ 000A =         LNFD EQU  10   ;LINE FEED
+ 000C =         FFORM	  EQU  12   ;FORM FEED
+ 0009 =         TABKEY	  EQU  9    ;TAB KEY (CONTROL-I)
+ 0007 =         BELL EQU  7    ;BELL CODE
+ 001B =         ESC  EQU  27   ;ESCAPE KEY
+ 007F =         DELKEY	  EQU  127  ;DELETE KEY
+ 0007 =         DEFIND	  EQU  7    ;KEY TO DEFINE SEARCH/REPLACE
+                     PAGE
+                ********  HEATH SCREEN CONTROL ROUTINES
+                **
+ 001B =         LEADIN	  EQU  ESC  ;CONTROL SEQUENCE FLAG CODE
+ 00DB =         CSI  EQU  128+'['   ;CONTROL SEQUENCE INIT
+ 0280 DB313B3148INTSEQ	  DB   CSI,'1;1H';HOME cursor
+ 0285 DB313B3234     DB   CSI,'1;24r';Scroll region
+ 028B 00             DB   0    ;SEQUENCE TERMINATOR
+ 028C DB72      EXITSEQ DB     CSI,'r';return to normal scroll
+ 028E DB313B3148     DB   CSI,'1;1H';HOME cursor
+ 0293 DB324A         DB   CSI,'2J'  ;clear screen
+ 0296 00             DB   0
+ 0297 DB324A    CLRSEQ	  DB   CSI,'2J';SEQUENCE TO CLEAR SCREEN
+ 029A 00             DB   0
+ 029B DB4B      LNSEQ	  DB   CSI,'K';SEQUENCE TO CLEAR LINE
+ 029D 00             DB   0
+ 029E DB        SETSEQ	  DB   CSI  ;SEQUENCE TO SET CURSOR LOCATION
+ 029F 0000      SETR DW   0    ;CURSOR COORDINATES (ROW)
+ 02A1 3B             DB   ';'
+ 02A2 0000      SETC DW   0    ;CURSOR COORDINATES (COL)
+ 02A4 48             DB   'H'
+ 02A5 00             DB   0
+ 02A6 DB53      SCROLSQ DB     CSI,'S';SEQUENCE TO SCROLL FWD (UP) 1 LINE
+ 02A8 DB32333B31     DB   CSI,'23;1H';JUMP TO BOTTOM ROW FOR BACKFILL
+ 02AE DB4A           DB   CSI,'J'   ;clear below/after
+ 02B0 00             DB   0
+                *
+ 02B1 =         CURSE	  EQU  $    ;SET CURSOR CORRDINATES IN HL (L=row, H=col)
+ 02B1 EB             XCHG
+ 02B2 7B             MOV  A,E  ;ROW
+ 02B3 CDC602         CALL NUM
+ 02B6 229F02         SHLD SETR ;STORE IN SEQUENCE
+ 02B9 7A             MOV  A,D  ;COL
+ 02BA CDC602         CALL NUM
+ 02BD 22A202         SHLD SETC ;STORE IN SEQUENCE
+ 02C0 119E02         LXI  D,SETSEQ ;USE CPM BUFFER PRINT
+ 02C3 C3F702         JMP  PRSEQ
+                *
+                ; 1-24 or 1-80...
+ 02C6 2E30      NUM: MVI  L,'0'     ; MSD after SHLD...
+ 02C8 D60A      NUM0:	  SUI  10
+ 02CA 2C             INR  L
+ 02CB D2C802         JNC  NUM0
+ 02CE C60A           ADI  10
+ 02D0 2D             DCR  L
+ 02D1 F630           ORI  '0'
+ 02D3 67             MOV  H,A  ; LSD
+ 02D4 C9             RET
+                *
+ 02D5 11A602    SCROLL:   LXI  D,SCROLSQ;INITIATE LINE SCROLL SEQUENCE
+ 02D8 C3F702         JMP  PRSEQ
+                *
+ 02DB 119B02    CLRLINE:LXI    D,LNSEQ ;CLEAR LINE
+ 02DE C3F702         JMP  PRSEQ
+                *
+ 02E1 0E08      BKSP:	  MVI  C,BKSPCODE
+ 02E3 C30602         JMP  CONOUT
+ 0008 =         BKSPCODE EQU   8
+                *
+ 02E6 210101    CLRSCRN:LXI    H,0101H
+ 02E9 CDB102         CALL CURSE     ;FORCE CURSOR HOME
+ 02EC 119702         LXI  D,CLRSEQ ;CLEAR SCREEN
+ 02EF C3F702         JMP  PRSEQ
+                *
+ 02F2 0E07      ALARM:	  MVI  C,BELL  ;SOUND ALARM BELL
+ 02F4 C30602         JMP  CONOUT
+                *
+ 02F7 1A        PRSEQ:	  LDAX D    ;PRINT SEQ AT DE UNTIL ZERO
+ 02F8 A7             ANA  A
+ 02F9 C8             RZ
+ 02FA D5             PUSH D
+ 02FB F20703         JP   PRSEQ0
+ 02FE E67F           ANI  7FH
+ 0300 F5             PUSH PSW
+ 0301 0E1B           MVI  C,LEADIN
+ 0303 CD0602         CALL CONOUT
+ 0306 F1             POP  PSW
+ 0307 4F        PRSEQ0:   MOV  C,A
+ 0308 CD0602         CALL CONOUT
+ 030B D1             POP  D
+ 030C 13             INX  D
+ 030D C3F702         JMP  PRSEQ
+                
+ 0310 =         INITSCRN EQU   $    ;INIT/DE-INIT ENVIRONMENT
+ 0310 118C02         LXI  D,EXITSEQ
+ 0313 213D03         LXI  H,INITSW
+ 0316 7E             MOV  A,M
+ 0317 3601           MVI  M,1
+ 0319 A7             ANA  A
+ 031A C2F702         JNZ  PRSEQ     ; finished
+ 031D 2A0901         LHLD ORGCONST
+ 0320 223E03         SHLD CONST
+ 0323 214303         LXI  H,TCONST
+ 0326 220901         SHLD ORGCONST
+ 0329 2A0C01         LHLD ORGCONIN
+ 032C 224003         SHLD CONIN
+ 032F 216403         LXI  H,TCONIN
+ 0332 220C01         SHLD ORGCONIN
+ 0335 118002         LXI  D,INTSEQ
+ 0338 C3F702         JMP  PRSEQ
+                
+ 033B 00        DUMMY1	  NOP
+ 033C C9             RET
+                
+ 033D 00        INITSW:   DB   0    ;FIRST-TIME SWITCH
+                
+ 0109 =         ORGCONST EQU   BASE+109H ;MW CONST ADDR FROM CBIOS
+ 033E 0000      CONST	  DW   0    ;ADDRESS FOR CBIOS CHAR STATUS
+                
+ 010C =         ORGCONIN EQU   BASE+10CH ;MW CONIN ADDR FROM CBIOS
+ 0340 0000      CONIN	  DW   0    ;ADDR FOR CBIOS CHAR INPUT
+                
+ 0342 E9        HLCALL:   PCHL	    ;ROUTINE PROVIDING INDIRECT CALLS
+                
+ 0343 2A3E03    TCONST:   LHLD CONST
+ 0346 C34203         JMP  HLCALL
+                
+ 0349 3EFA      DCONST:   MVI  A,250;WAIT FOR 0.875 MS @ 4MHZ
+ 034B 2620      	MVI H,32
+                DLYO:
+ 034D 3D        DLYI:	  DCR  A    ;(9600 Baud is 1.04ms/char)
+ 034E C24D03         JNZ  DLYI ;(125K Baud is 0.08ms/char)
+ 0351 25        	 DCR H
+ 0352 C24D03         JNZ DLYO  
+ 0355 CD4303         CALL TCONST    ;(if no s/w overhead)
+ 0358 B7             ORA  A
+ 0359 C9             RET
+                
+ 035A 0000000000ERRSEQ:   DB   0,0,0,0,0,0,0,0
+ 0362 0000      ERRPTR:   DW   0
+                
+                TCONIN:
+ 0364 2A6203         LHLD ERRPTR
+ 0367 7D             MOV  A,L
+ 0368 B4             ORA  H
+ 0369 CA7B03         JZ   TC0
+ 036C 7E             MOV  A,M
+ 036D 3600           MVI  M,0
+ 036F 23             INX  H
+ 0370 226203         SHLD ERRPTR
+ 0373 B7             ORA  A
+ 0374 C0             RNZ
+ 0375 210000         LXI  H,0
+ 0378 226203         SHLD ERRPTR
+ 037B 2A4003    TC0: LHLD CONIN
+ 037E CD4203         CALL HLCALL
+ 0381 FE1B           CPI  ESC
+ 0383 C0             RNZ       ;DIRECT RETURN ANY NON-ESCAPE SEQUENCE
+ 0384 215A03         LXI  H,ERRSEQ
+ 0387 226203         SHLD ERRPTR
+ 038A 77             MOV  M,A  ; ESC
+ 038B 23             INX  H
+ 038C 3600           MVI  M,0
+ 038E E5             PUSH H
+ 038F CD4903         CALL DCONST    ; DELAYED CONST
+ 0392 E1             POP  H
+ 0393 CA6403         JZ   TCONIN    ; unspool ESC...
+ 0396 E5             PUSH H
+ 0397 2A4003         LHLD CONIN
+ 039A CD4203         CALL HLCALL
+ 039D E1             POP  H
+ 039E 77             MOV  M,A
+ 039F 23             INX  H
+ 03A0 3600           MVI  M,0
+ 03A2 FE4F           CPI  'O'
+ 03A4 CAAC03         JZ   TC2
+ 03A7 FE5B           CPI  '['
+ 03A9 C26403         JNZ  TCONIN    ; unspool ESC x
+ 03AC E5        TC2: PUSH H
+ 03AD CD4903         CALL DCONST    ; DELAYED CONST
+ 03B0 E1             POP  H
+ 03B1 CA6403         JZ   TCONIN    ; unspool ESC [
+ 03B4 E5             PUSH H
+ 03B5 2A4003         LHLD CONIN
+ 03B8 CD4203         CALL HLCALL
+ 03BB E1             POP  H
+ 03BC 77             MOV  M,A
+ 03BD 23             INX  H
+ 03BE 3600           MVI  M,0
+ 03C0 FE30           CPI  '0'
+ 03C2 DA6403         JC   TCONIN    ; unspool ESC [ ...
+ 03C5 FE3A           CPI  '9'+1
+ 03C7 DAAC03         JC   TC2
+ 03CA FE7E           CPI  '~'
+ 03CC CAD803         JZ   TC3
+                     ; assume letter...
+                     ; "ESC O c" [PQRS] function keys f1-f4
+                     ; "ESC [ c" [ABCD] cursor keys
+                     ; TODO: handle "ESC [ nn ~" function keys...
+ 03CF 210000    TC6: LXI  H,0
+ 03D2 226203         SHLD ERRPTR
+ 03D5 F680           ORI  10000000B ;ELSE RETURN IT WITH HIGH-BIT SET
+ 03D7 C9             RET
+ 03D8 215C03    TC3: LXI  H,ERRSEQ+2; point to "nn"
+ 03DB 0600           MVI  B,0
+ 03DD 7E        TC4: MOV  A,M
+ 03DE 23             INX  H
+ 03DF FE7E           CPI  '~'
+ 03E1 CAF103         JZ   TC5
+ 03E4 D630           SUI  '0'
+ 03E6 4F             MOV  C,A
+ 03E7 78             MOV  A,B
+ 03E8 87             ADD  A    ; *2
+ 03E9 87             ADD  A    ; *4
+ 03EA 80             ADD  B    ; *5
+ 03EB 87             ADD  A    ; *10
+ 03EC 81             ADD  C
+ 03ED 47             MOV  B,A
+ 03EE C3DD03         JMP  TC4
+ 03F1 3E61      TC5: MVI  A,'a'
+ 03F3 80             ADD  B    ; f5='p', f6='r', f7='s', f8='t', INS='c', DEL='d'
+ 03F4 C3CF03         JMP  TC6  ; PGUP='f', PGDN='g'
+                
+                ;    f5   f6   f7   f8
+                ;    \e[15~    \e[17~\e[18~\e[19~Note: skips 16...
+                ;    'p'  'r'  's'  't'
+                
+ 03F7                END
+

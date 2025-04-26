@@ -1,0 +1,46 @@
+A>asm termxtp1
+CP/M ASSEMBLER - v2.01
+03EC
+005H USE FACTOR
+END OF ASSEMBLY
+
+A>ddt edit.com
+DDT VERS 2.2
+NEXT  PC
+4080 0100
+-itermxtp1.hex
+-r
+NEXT  PC
+4100 0000
+-g0
+
+A>save 64 edit.com
+A>
+
+NOTE: "4100" may be "4080".
+
+
+
+Function Keys (PC keyboard)
+---------------------------
+
+<cursor> as expected
+f1	Line scroll backward
+f2	Line scroll forward
+Home	Home line/screen
+PageUp	Page backward
+PageDn	Page forward
+Insert	Full insert (open text)
+Delete	Delete Character
+f5	Set FormFeed character
+f6	Start Search/Replace
+f7	Repeat Search/Replace
+f8	Set Block Marker
+f3	Insert character mode (until cursor move)
+f4	Delete to end of line (second push)
+Ctrl-T	Jump to Top of file
+Ctrl-B	Jump to Bottom of file
+Ctrl-W	Word delete
+BkSpace Delete backwards (if this doesnt work, check and adjust
+        terminal emulator backspace setting)
+
